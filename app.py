@@ -1,17 +1,3 @@
-[12/15, 6:35 PM] ChatGPT: Chaliye, main aapke liye full improved Streamlit app ka code banata hoon jo ye sab features cover karega:
-
-- User se last 5 digits input lenge (0-9)
-- Un digits se Big/Small calculate karenge (0-4 = Small, 5-9 = Big)
-- Ye inputs model ko denge prediction ke liye
-- Prediction confidence show karenge
-- Prediction history session me rakhenge
-- Big vs Small frequency chart bhi banayenge
-
----
-
-*Complete Streamlit app code:*
-
-```python
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -23,7 +9,7 @@ model = load_model("mock_model.h5")
 
 st.title("🎲 Big vs Small Predictor")
 
-1. User se last 5 results input lein (digits 0-9)
+# 1. User se last 5 results input lein (digits 0-9)
 st.markdown("*Enter last 5 results (digits 0 to 9):*")
 inputs = []
 cols = st.columns(5)
@@ -32,14 +18,14 @@ for i in range(5):
         val = st.number_input(f"Result {i+1}", min_value=0, max_value=9, value=0, step=1)
         inputs.append(val)
 
-2. Convert digits to Big(1) or Small(0) feature
+# 2. Convert digits to Big(1) or Small(0) feature
 Rule: 0-4 = Small(0), 5-9 = Big(1)
 features = [1 if x >= 5 else 0 for x in inputs]
 
 st.markdown("*Converted Features (Big=1, Small=0):*")
 st.write(features)
 
-3. Prediction button
+# 3. Prediction button
 if st.button("Predict"):
     data = np.array([features])
     prediction = model.predict(data)
@@ -63,7 +49,7 @@ if st.button("Predict"):
         "confidence": confidence
     })
 
-5. Show prediction history
+# 5. Show prediction history
 if "history" in st.session_state and st.session_state.history:
     st.markdown("### 📜 Prediction History")
     df_hist = pd.DataFrame(st.session_state.history)
