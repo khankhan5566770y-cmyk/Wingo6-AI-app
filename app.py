@@ -19,7 +19,7 @@ for i in range(5):
         inputs.append(val)
 
 # 2. Convert digits to Big(1) or Small(0) feature
-Rule: 0-4 = Small(0), 5-9 = Big(1)
+# Rule: 0-4 = Small(0), 5-9 = Big(1)
 features = [1 if x >= 5 else 0 for x in inputs]
 
 st.markdown("*Converted Features (Big=1, Small=0):*")
