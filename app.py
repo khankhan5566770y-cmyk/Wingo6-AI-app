@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 
-Load model (make sure mock_model.h5 aapke repo mein hai)
+# Load model (make sure mock_model.h5 aapke repo mein hai)
 model = load_model("mock_model.h5")
 
 st.title("🎲 Big vs Small Predictor")
