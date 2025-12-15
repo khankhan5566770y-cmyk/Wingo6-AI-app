@@ -1,70 +1,63 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
+import matplotlib.pyplot as plt
+import os
 
-# Load model (make sure mock_model.h5 aapke repo mein hai)
+# Load model
 model = load_model("mock_model.h5")
 
-st.title("🎲 Big vs Small Predictor")
+# Prediction log file
+log_file = "prediction_history.csv"
 
-# 1. User se last 5 results input lein (digits 0-9)
-st.markdown("*Enter last 5 results (digits 0 to 9):*")
-inputs = []
-cols = st.columns(5)
-for i in range(5):
-    with cols[i]:
-        val = st.number_input(f"Result {i+1}", min_value=0, max_value=9, value=0, step=1)
-        inputs.append(val)
+st.title("Big or Small Prediction App")
 
-# 2. Convert digits to Big(1) or Small(0) feature
-# Rule: 0-4 = Small(0), 5-9 = Big(1)
-features = [1 if x >= 5 else 0 for x in inputs]
+st.sidebar.header("Select Input Method")
+input_method = st.sidebar.radio("Choose input method:", ("Manual", "Random"))
 
-st.markdown("*Converted Features (Big=1, Small=0):*")
-st.write(features)
+# Generate input features
+if input_method == "Manual":
+    features = []
+    for i in range(5):
+        val = st.number_input(f"Feature {i+1}", 0.0, 1.0, 0.5)
+        features.append(val)
+else:
+    features = np.random.rand(5).tolist()
+    st.write("Randomly Generated Features:", features)
 
-# 3. Prediction button
+# Prediction button
 if st.button("Predict"):
     data = np.array([features])
     prediction = model.predict(data)
-    predicted_class = np.argmax(prediction, axis=1)[0]
-    confidence = round(np.max(prediction)*100, 2)
+    predicted_class = np.argmax(prediction)
 
     label_map = {0: "Small", 1: "Big"}
-    result = label_map[predicted_class]
+    result = label_map[int(predicted_class)]
+    st.success(f"Predicted Class: *{result}*")
+    st.write("Prediction Probabilities:", prediction)
 
-    st.success(f"✅ Predicted: {result}")
-    st.info(f"📊 Confidence: {confidence}%")
+    # Save to history
+    df_entry = pd.DataFrame([features + [result]])
+    df_entry.columns = [f"Feature_{i+1}" for i in range(5)] + ["Result"]
 
-    # 4. Save prediction history in session state
-    if "history" not in st.session_state:
-        st.session_state.history = []
+    if os.path.exists(log_file):
+        old_df = pd.read_csv(log_file)
+        df_entry = pd.concat([old_df, df_entry], ignore_index=True)
 
-    st.session_state.history.append({
-        "inputs": inputs,
-        "features": features,
-        "prediction": result,
-        "confidence": confidence
-    })
+    df_entry.to_csv(log_file, index=False)
 
-# 5. Show prediction history
-if "history" in st.session_state and st.session_state.history:
-    st.markdown("### 📜 Prediction History")
-    df_hist = pd.DataFrame(st.session_state.history)
-    st.dataframe(df_hist)
+# Show prediction history
+if os.path.exists(log_file):
+    st.subheader("Prediction History")
+    history_df = pd.read_csv(log_file)
+    st.dataframe(history_df.tail(10))
 
-    # 6. Frequency chart of Big vs Small in history features
-    all_features = [f for h in st.session_state.history for f in h["features"]]
-    freq = {
-        "Small (0)": all_features.count(0),
-        "Big (1)": all_features.count(1)
-    }
-
-    st.markdown("### 🧊 Big vs Small Frequency Chart")
+    # Plotting count of Big vs Small
+    st.subheader("Prediction Distribution")
+    count = history_df["Result"].value_counts()
     fig, ax = plt.subplots()
-    ax.bar(freq.keys(), freq.values(), color=["skyblue", "lightgreen"])
+    ax.bar(count.index, count.values, color=["skyblue", "salmon"])
     ax.set_ylabel("Count")
-    ax.set_title("Big vs Small frequency in input features history")
+    ax.set_title("Big vs Small")
     st.pyplot(fig)
